@@ -1,0 +1,153 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopypy Affiliate Program</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://img.freepik.com/free-psd/3d-rendering-ecommerce-background_23-2151386708.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .receipt-card {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Shopypy Affiliate Program</h1>
+        <div class="space-y-4">
+            <input type="text" id="name" placeholder="Name" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <input type="text" id="promo" placeholder="Promo Code" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <input type="number" id="salesPrice" placeholder="Sales Price (Rs)" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <input type="number" id="quantity" placeholder="Sales Quantity" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <button onclick="generateReceipt()" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">Generate Receipt</button>
+        </div>
+        <div id="receiptCard" class="receipt-card mt-6 p-5 bg-gray-50 rounded-lg hidden">
+            <h2 class="text-xl font-bold text-blue-600 text-center mb-4">Affiliate Receipt</h2>
+            <hr class="border-blue-600 mb-4">
+            <div class="space-y-2 text-gray-700">
+                <div class="flex justify-between">
+                    <span class="font-semibold">Name:</span>
+                    <span id="rName"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-semibold">Promo Code:</span>
+                    <span id="rPromo"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-semibold">Sales Quantity:</span>
+                    <span id="rQuantity"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-semibold">Commission (10%):</span>
+                    <span>Rs <span id="rCommission"></span></span>
+                </div>
+            </div>
+            <button id="downloadBtn" onclick="downloadReceipt()" class="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">Download Receipt</button>
+        </div>
+        <canvas id="receiptCanvas" class="hidden"></canvas>
+    </div>
+    <script>
+        function generateReceipt() {
+            let name = document.getElementById("name").value;
+            let promo = document.getElementById("promo").value;
+            let quantity = document.getElementById("quantity").value;
+            let salesPrice = parseFloat(document.getElementById("salesPrice").value);
+            let commission = (salesPrice * quantity * 0.10).toFixed(2);
+            document.getElementById("rName").innerText = name;
+            document.getElementById("rPromo").innerText = promo;
+            document.getElementById("rQuantity").innerText = quantity;
+            document.getElementById("rCommission").innerText = commission;
+            let receiptCard = document.getElementById("receiptCard");
+            receiptCard.style.display = "block";
+            receiptCard.classList.add("animate-slide-in");
+        }
+
+        function downloadReceipt() {
+            let receipt = document.getElementById("receiptCard");
+            let canvas = document.getElementById("receiptCanvas");
+            let ctx = canvas.getContext("2d");
+            let width = receipt.offsetWidth;
+            let height = receipt.offsetHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw background
+            ctx.fillStyle = "#f9fafb";
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw header
+            ctx.fillStyle = "#2563eb";
+            ctx.fillRect(0, 0, width, 60);
+            ctx.font = "bold 20px Arial";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.fillText("Affiliate Receipt", width / 2, 40);
+
+            // Draw content
+            ctx.font = "14px Roboto Mono";
+            ctx.fillStyle = "#1f2937";
+            ctx.textAlign = "left";
+            ctx.fillText("Name: " + document.getElementById("rName").innerText, 20, 100);
+            ctx.fillText("Promo Code: " + document.getElementById("rPromo").innerText, 20, 130);
+            ctx.fillText("Sales Quantity: " + document.getElementById("rQuantity").innerText, 20, 160);
+            ctx.fillText("Commission (10%): Rs " + document.getElementById("rCommission").innerText, 20, 190);
+
+            // Download as image
+            let link = document.createElement('a');
+            link.download = 'receipt.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
