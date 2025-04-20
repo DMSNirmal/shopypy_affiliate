@@ -139,9 +139,10 @@
 
             // Receipt Details
             ctx.fillStyle = '#374151';
+            ctx.font = '20px Roboto Mono';
             ctx.textAlign = 'left';
-            const startY = 200;
-            const lineHeight = 50;
+            const startY = 190; // Adjusted for larger text
+            const lineHeight = 48; // Increased for larger text
 
             // Draw labels and values
             const labels = [
@@ -170,7 +171,7 @@
             // Footer: Date and Branding
             const currentDate = new Date().toLocaleDateString();
             ctx.fillStyle = '#6b7280';
-            ctx.font = '18px Roboto Mono';
+            ctx.font = '16px Roboto Mono';
             ctx.textAlign = 'center';
             ctx.fillText(`Generated on: ${currentDate}`, width / 2, height - 80);
             ctx.fillText('Powered by Shopypy', width / 2, height - 50);
